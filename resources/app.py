@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 from flask_restful import Api, Resource
 from flask_sqlalchemy import SQLAlchemy
 
@@ -73,7 +73,12 @@ class ProductCollection(Resource):
         except ValueError as e:
             return {"message": str(e)}, 400
         return "", 201
-
+    
+class ProductItem(Resource):
+    
+    def get(self, handle):
+        return Response(status=501)
+    
 api.add_resource(ProductCollection, "/api/products/")
 
 if __name__ == "__main__":
