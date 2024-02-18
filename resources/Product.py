@@ -1,4 +1,4 @@
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, url_for
 from flask_restful import Api, Resource
 from flask_sqlalchemy import SQLAlchemy
 
@@ -70,8 +70,12 @@ class ProductCollection(Resource):
             )
             db.session.add(product)
             db.session.commit()
+            
         except ValueError as e:
             return {"message": str(e)}, 400
+        # Construct the URL for the newly created resource
+        # product_url = api.url_for(ProductItem, handle=product.handle)
+        # Return Response with location header
         return "", 201
     
 class ProductItem(Resource):
@@ -79,7 +83,5 @@ class ProductItem(Resource):
     def get(self, handle):
         return Response(status=501)
     
-api.add_resource(ProductCollection, "/api/products/")
-
 if __name__ == "__main__":
     app.run(debug=True)
