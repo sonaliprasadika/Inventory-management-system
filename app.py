@@ -1,12 +1,25 @@
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, abort, jsonify, request
 from flask_restful import Api, Resource
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.routing import BaseConverter
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 db = SQLAlchemy(app)
 
 api = Api(app)
+
+class ProductConverter(BaseConverter):
+    def to_python(self, value):
+        product = Product.query.filter_by(handle=value).first()
+        if product is None:
+            abort(404)
+        return product
+
+    def to_url(self, value):
+        return value.handle
+
+app.url_map.converters['product'] = ProductConverter
     
 class StorageItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,7 +46,6 @@ def create_tables():
 # Call the function to create tables
 create_tables()
 
-    
 class ProductCollection(Resource):
     def get(self):
         products = Product.query.all()
@@ -75,13 +87,19 @@ class ProductCollection(Resource):
         return Response(
             status=201, headers={"Location": api.url_for(ProductItem, handle=product.handle)}
         )
+
 class ProductItem(Resource):
-    
-    def get(self):
-        return Response(status=501)
+    def get(self, handle):
+        product = handle  # `handle` parameter will be a Product instance
+        product_dict = {
+            "handle": product.handle,
+            "weight": product.weight,
+            "price": product.price
+        }
+        return jsonify(product_dict)
 
 api.add_resource(ProductCollection, "/api/products/")
-api.add_resource(ProductItem, "/api/products/<handle>/")
+api.add_resource(ProductItem, "/api/products/<product:handle>/")
 
 if __name__ == "__main__":
     app.run(debug=True)
