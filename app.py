@@ -1,30 +1,25 @@
 from flask import Flask
 from flask_restful import Api
 from resources.Product import ProductCollection, ProductItem
+from flask import Blueprint
+from resources.Product import init_db
 
-# Create Flask app
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+# Initialize SQLAlchemy with the Flask app
+init_db(app)
 
-# Create Flask-Restful Api object
-api = Api(app)
+
+# Rest of your app setup
+api_bp = Blueprint("api", __name__, url_prefix="/api")
+api = Api(api_bp)
 
 # Register resources
-api.add_resource(ProductCollection, "/api/products/")
-api.add_resource(ProductItem, "/api/products/<handle>/")
+api.add_resource(ProductCollection, "/products")
+api.add_resource(ProductItem, "/products/<string:handle>/")
 
-# Register Blueprint
-from flask import Blueprint
-api_bp = Blueprint("api", __name__, url_prefix="/api")
-api.init_app(api_bp)
-
-# Register Blueprint route
-@api_bp.route("/")
-def index():
-    return ""
-
-# Register Blueprint in the app
+# Register blueprint with Flask app
 app.register_blueprint(api_bp)
 
-# Run the Flask application
 if __name__ == "__main__":
     app.run(debug=True)
